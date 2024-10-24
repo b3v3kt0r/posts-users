@@ -3,6 +3,8 @@ from sqlalchemy import Column, String, Integer
 from sqlalchemy.orm import relationship
 
 from database.engine import Base
+from comments.models import Comment
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -15,8 +17,8 @@ class User(Base):
     email = Column(String(50), unique=True, nullable=False)
     password = Column(String, nullable=False)
 
-    posts = relationship("Post", back_populates="author")
-    comments = relationship("Comment", back_populates="author")
+    posts = relationship("Post", back_populates="user")
+    comments = relationship("Comment", back_populates="user")
 
     def verify_password(self, password):
         return pwd_context.verify(password, self.password)
