@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from comments import schemas
-from comments.crud import delete_comment_from_db
+from comments.crud import delete_comment_from_db, update_comment_in_db
 from database.engine import get_db
 from comments.models import Comment
 from posts.models import Post
@@ -42,8 +42,27 @@ def create_comment(
     return db_comment
 
 
+@comments_router.put("/comments/{comment_id}", response_model=schemas.Comment)
+def update_comment(
+        comment_id: int,
+        comment_data: schemas.Comment,
+        user: models.User = Depends(services.get_current_user),
+        db: Session = Depends(get_db)
+):
+    comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    if comment is None:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    if comment.user_id != user.id:
+        raise HTTPException(status_code=403, detail="You are not allowed to edit this comment")
+    return update_comment_in_db(db=db, comment_data=comment_data, comment=comment)
+
+
 @comments_router.delete("/comments/{comment_id}", response_model=schemas.Comment)
-def delete_comment(comment_id: int, user: models.User = Depends(services.get_current_user), db: Session = Depends(get_db)):
+def delete_comment(
+        comment_id: int,
+        user: models.User = Depends(services.get_current_user),
+        db: Session = Depends(get_db)
+):
     user_id = user.id
     comment = db.query(Comment).filter(Comment.id == comment_id).first()
     if not comment:
