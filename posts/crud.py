@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from posts import models, schemas
@@ -17,7 +19,7 @@ def create_post(db: Session, post: schemas.PostCreate, user_id: int):
         user_id=user_id,
         auto_replay_enabled=post.auto_replay_enabled,
         auto_replay_delay=post.auto_replay_delay,
-        created_at=post.created_at,
+        created_at=datetime.now()
     )
     db.add(db_post)
     db.commit()
