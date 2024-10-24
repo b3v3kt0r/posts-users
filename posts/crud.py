@@ -4,7 +4,10 @@ from posts import models, schemas
 
 
 def get_all_posts(db: Session):
-    return db.query(models.Post).all()
+    posts = db.query(models.Post).all()
+    if posts:
+        return posts
+    return []
 
 
 def create_post(db: Session, post: schemas.PostCreate):
