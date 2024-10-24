@@ -31,6 +31,18 @@ def create_post(db: Session, post: schemas.PostCreate, user_id: int):
     return db_post
 
 
+def update_post_in_db(db: Session, post_data, post):
+    post.title = post_data.title or post.title
+    post.content = post_data.content or post.content
+    post.auto_replay_enabled = post_data.auto_replay_enabled if post_data.auto_replay_enabled is not None else post.auto_replay_enabled
+    post.auto_replay_delay = post_data.auto_replay_delay or post.auto_replay_delay
+
+    db.commit()
+    db.refresh(post)
+
+    return post
+
+
 def delete_post_from_db(db: Session, post_id: int):
     db.delete(get_post_by_id(db, post_id))
     db.commit()
