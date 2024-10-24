@@ -1,12 +1,8 @@
-from passlib.context import CryptContext
 from sqlalchemy import Column, String, Integer
 from sqlalchemy.orm import relationship
 
 from database.engine import Base
 from comments.models import Comment
-
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class User(Base):
@@ -19,9 +15,3 @@ class User(Base):
 
     posts = relationship("Post", back_populates="user")
     comments = relationship("Comment", back_populates="user")
-
-    def verify_password(self, password):
-        return pwd_context.verify(password, self.password)
-
-    def hase_password(self, password):
-        self.password = pwd_context.hash(password)
