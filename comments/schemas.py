@@ -16,4 +16,4 @@ class Comment(CommentBase):
     user_id: int
     post_id: int
     is_blocked: bool
-    created_at: datetime.now()
+    created_at: datetime
