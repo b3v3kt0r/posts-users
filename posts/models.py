@@ -1,9 +1,11 @@
+import datetime
+
 from sqlalchemy import (
     Column,
     Integer,
     String,
     ForeignKey,
-    Boolean
+    Boolean, DateTime
 )
 from sqlalchemy.orm import relationship
 
@@ -19,5 +21,6 @@ class Post(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     auto_replay_enabled = Column(Boolean, default=False)
     auto_replay_delay = Column(Integer, default=0)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
 
     user = relationship("User", back_populates="posts")
