@@ -12,6 +12,10 @@ def get_all_posts(db: Session):
     return []
 
 
+def get_post_by_id(db: Session, id: int):
+    return db.query(models.Post).filter(models.Post.id == id).first()
+
+
 def create_post(db: Session, post: schemas.PostCreate, user_id: int):
     db_post = models.Post(
         title=post.title,
@@ -25,3 +29,8 @@ def create_post(db: Session, post: schemas.PostCreate, user_id: int):
     db.commit()
     db.refresh(db_post)
     return db_post
+
+
+def delete_post_from_db(db: Session, post_id: int):
+    db.delete(get_post_by_id(db, post_id))
+    db.commit()
