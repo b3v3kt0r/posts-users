@@ -20,3 +20,9 @@ def create_comment(db: Session, comment: Comment, post_id: int, user_id: int):
     db.commit()
     db.refresh(db_comment)
     return db_comment
+
+
+def delete_comment_from_db(db: Session, comment_id: int):
+    comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    db.delete(comment)
+    db.commit()

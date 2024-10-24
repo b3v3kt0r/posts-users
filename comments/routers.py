@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from comments import schemas
+from comments.crud import delete_comment_from_db
 from database.engine import get_db
 from comments.models import Comment
 from posts.models import Post
@@ -39,3 +40,14 @@ def create_comment(
     db.commit()
     db.refresh(db_comment)
     return db_comment
+
+
+@comments_router.delete("/comments/{comment_id}", response_model=schemas.Comment)
+def delete_comment(comment_id: int, user: models.User = Depends(services.get_current_user), db: Session = Depends(get_db)):
+    user_id = user.id
+    comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    if comment.user_id != user_id:
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this comment")
+    delete_comment_from_db(db=db, comment_id=comment_id)
