@@ -58,6 +58,11 @@ def update_comment(
         raise HTTPException(status_code=404, detail="Comment not found")
     if comment.user_id != user.id:
         raise HTTPException(status_code=403, detail="You are not allowed to edit this comment")
+
+    toxicity = check_for_toxicity(comment_data.content)
+    if toxicity:
+        raise HTTPException(status_code=400, detail="Toxicity detected")
+
     return update_comment_in_db(db=db, comment_data=comment_data, comment=comment)
 
 
