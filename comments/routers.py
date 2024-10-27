@@ -32,13 +32,12 @@ def create_comment(
         raise HTTPException(status_code=404, detail="Post not found")
 
     toxicity = check_for_toxicity(comment.content)
-    if toxicity:
-        raise HTTPException(status_code=400, detail="Toxicity detected")
 
     db_comment = Comment(
         content=comment.content,
         post_id=post_id,
         user_id=user.id,
+        is_blocked=toxicity
     )
     db.add(db_comment)
     db.commit()
@@ -61,7 +60,7 @@ def update_comment(
 
     toxicity = check_for_toxicity(comment_data.content)
     if toxicity:
-        raise HTTPException(status_code=400, detail="Toxicity detected")
+        comment.is_blocked = toxicity
 
     return update_comment_in_db(db=db, comment_data=comment_data, comment=comment)
 

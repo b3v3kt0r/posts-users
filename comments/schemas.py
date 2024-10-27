@@ -8,7 +8,7 @@ class CommentBase(BaseModel):
 
 
 class CommentCreate(CommentBase):
-    pass
+    is_blocked: bool = False
 
 
 class Comment(CommentBase):
