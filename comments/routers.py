@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from comments import schemas
-from comments.crud import delete_comment_from_db, update_comment_in_db
+from comments.crud import delete_comment_from_db, update_comment_in_db, check_for_toxicity
 from database.engine import get_db
 from comments.models import Comment
 from posts.models import Post
@@ -30,6 +30,10 @@ def create_comment(
     post = db.query(Post).filter(Post.id == post_id).first()
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
+
+    toxicity = check_for_toxicity(comment.content)
+    if toxicity:
+        raise HTTPException(status_code=400, detail="Toxicity detected")
 
     db_comment = Comment(
         content=comment.content,

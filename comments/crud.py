@@ -1,8 +1,36 @@
+import os
 from datetime import datetime
 
+from dotenv import load_dotenv
+from googleapiclient import discovery
 from sqlalchemy.orm import Session
 
 from comments.models import Comment
+
+load_dotenv()
+
+api_key = os.environ.get("PERSPECTIVE_API_KEY")
+
+
+def check_for_toxicity(comment):
+    client = discovery.build(
+        "commentanalyzer",
+        "v1alpha1",
+        developerKey=api_key,
+        discoveryServiceUrl="https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1",
+        static_discovery=False,
+    )
+
+    analyze_request = {
+        'comment': {'text': comment},
+        'requestedAttributes': {'TOXICITY': {}}
+    }
+
+    response = client.comments().analyze(body=analyze_request).execute()
+
+    if response["attributeScores"]["TOXICITY"]["spanScores"][0]["score"]["value"] > 0.7:
+        return True
+    return False
 
 
 def get_comments_for_post(db: Session, post_id):
