@@ -1,23 +1,27 @@
 import os
+import threading
 from datetime import datetime
 
+import cohere
 from dotenv import load_dotenv
 from googleapiclient import discovery
 from sqlalchemy import func, and_, case
 from sqlalchemy.orm import Session
 
 from comments.models import Comment
+from posts.models import Post
 
 load_dotenv()
 
-api_key = os.environ.get("PERSPECTIVE_API_KEY")
+perspective_api_key = os.environ.get("PERSPECTIVE_API_KEY")
+cohere_api_key = os.environ.get("COHERE_API_KEY")
 
 
 def check_for_toxicity(comment):
     client = discovery.build(
         "commentanalyzer",
         "v1alpha1",
-        developerKey=api_key,
+        developerKey=perspective_api_key,
         discoveryServiceUrl="https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1",
         static_discovery=False,
     )
@@ -94,3 +98,26 @@ def comments_analysis(db: Session, date_from: str, date_to: str):
         }
         for result in results
     ]
+
+
+def auto_replay_for_comments(db: Session, comment: str, post_id: int, delay: int, author_id: int):
+    def generate_reply():
+        co = cohere.ClientV2(cohere_api_key)
+
+        response = co.chat(
+            model="command-r-plus",
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Give a response for this comment: {comment}",
+                }
+            ]
+        )
+
+        reply = list(list(dict(response)["message"])[3][1][0])[1][1]
+
+        db_comment_reply = Comment(content=reply, post_id=post_id, user_id=author_id)
+        db.add(db_comment_reply)
+        db.commit()
+
+    threading.Timer(delay, generate_reply).start()

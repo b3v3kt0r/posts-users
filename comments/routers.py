@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from comments import schemas
-from comments.crud import delete_comment_from_db, update_comment_in_db, check_for_toxicity, comments_analysis
+from comments.crud import delete_comment_from_db, update_comment_in_db, check_for_toxicity, comments_analysis, \
+    auto_replay_for_comments
 from database.engine import get_db
 from comments.models import Comment
 from posts.models import Post
@@ -44,6 +45,10 @@ def create_comment(
     db.add(db_comment)
     db.commit()
     db.refresh(db_comment)
+
+    if post.auto_replay_enabled:
+        auto_replay_for_comments(db, comment.content, post_id, post.auto_replay_delay, post.user_id)
+
     return db_comment
 
 
