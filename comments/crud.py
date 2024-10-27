@@ -3,6 +3,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from googleapiclient import discovery
+from sqlalchemy import func, and_, case
 from sqlalchemy.orm import Session
 
 from comments.models import Comment
@@ -57,7 +58,39 @@ def update_comment_in_db(db: Session, comment: Comment, comment_data):
     db.refresh(comment)
     return comment
 
+
 def delete_comment_from_db(db: Session, comment_id: int):
     comment = db.query(Comment).filter(Comment.id == comment_id).first()
     db.delete(comment)
     db.commit()
+
+
+def comments_analysis(db: Session, date_from: str, date_to: str):
+    date_from_dt = datetime.strptime(date_from, "%Y-%m-%d")
+    date_to_dt = datetime.strptime(date_to, "%Y-%m-%d")
+
+    results = (
+        db.query(
+            func.strftime("%Y-%m-%d", Comment.created_at).label("day"),
+            func.count(Comment.id).label("total_comments"),
+            func.sum(
+                case(
+                    (Comment.is_blocked == True, 1),
+                    else_=0
+                )
+            ).label("blocked_comments"),
+        )
+        .filter(and_(Comment.created_at >= date_from_dt, Comment.created_at < date_to_dt))
+        .group_by(func.strftime("%Y-%m-%d", Comment.created_at))
+        .order_by("day")
+        .all()
+    )
+
+    return [
+        {
+            "day": result.day,
+            "total_comments": result.total_comments,
+            "blocked_comments": result.blocked_comments or 0,
+        }
+        for result in results
+    ]

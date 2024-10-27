@@ -1,8 +1,10 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from comments import schemas
-from comments.crud import delete_comment_from_db, update_comment_in_db, check_for_toxicity
+from comments.crud import delete_comment_from_db, update_comment_in_db, check_for_toxicity, comments_analysis
 from database.engine import get_db
 from comments.models import Comment
 from posts.models import Post
@@ -78,3 +80,12 @@ def delete_comment(
     if comment.user_id != user_id:
         raise HTTPException(status_code=403, detail="You do not have permission to delete this comment")
     delete_comment_from_db(db=db, comment_id=comment_id)
+
+
+@comments_router.get("/comments/comments-daily-breakdown/", response_model=List[dict])
+def get_comments_daily_breakdown(
+    date_from: str,
+    date_to: str,
+    db: Session = Depends(get_db),
+):
+    return comments_analysis(db=db, date_from=date_from, date_to=date_to)
