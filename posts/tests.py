@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from database.engine import Base, get_db
-from main import app  # Assuming your FastAPI app is in main.py
+from main import app
 from posts import crud
 from posts.models import Post
 from users.models import User
